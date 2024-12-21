@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Deals Data Entry</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        form {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        input, textarea, select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        input[readonly] {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .deal-item {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .time-inputs {
+            display: flex;
+            gap: 10px;
+            grid-column: 1 / -1;
+        }
+        .time-inputs input {
+            width: 50%;
+        }
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+        }
+        .checkbox-wrapper input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+        }
+        #dealsList {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Submit Travel Deal</h2>
+        <form id="dealForm">
+            <input type="text" name="id" placeholder="Deal ID" readonly>
+            <input type="text" name="destination" placeholder="Destination" required>
+            <input type="text" name="country" placeholder="Country" required>
+            <input type="text" name="flag" placeholder="Flag Emoji" required>
+            <input type="url" name="image_url" placeholder="Image URL" required>
+            <input type="number" name="price" placeholder="Price" required>
+            <input type="number" name="original_price" placeholder="Original Price" required>
+            <input type="number" name="discount" placeholder="Discount" required>
+            <input type="text" name="departure" placeholder="From City" required>
+            <select name="stops" required>
+                <option value="">Select Stops</option>
+                <option value="Non-stop">Non-stop</option>
+                <option value="1 Stop">1 Stop</option>
+                <option value="2+ Stops">2+ Stops</option>
+            </select>
+            <div class="checkbox-wrapper">
+                <label>
+                    <input type="checkbox" name="is_hot">
+                    Is Hot Deal
+                </label>
+            </div>
+            <select name="type" required>
+                <option value="">Select Cabin Type</option>
+                <option value="Economy">Economy</option>
+                <option value="Premium Economy">Premium Economy</option>
+                <option value="Business">Business</option>
+                <option value="First">First</option>
+            </select>
+            <input type="number" name="likes" placeholder="Likes" required value="0">
+            <input type="url" name="url" placeholder="Deal URL" required>
+            <div class="time-inputs">
+                <input type="time" name="departure_time" required>
+                <input type="time" name="arrival_time" required>
+            </div>
+            <input type="text" name="flight_duration" placeholder="Flight Duration (e.g., 5h 30m)" required>
+            <input type="text" name="posted_by" placeholder="Posted By" required>
+            <input type="url" name="posted_by_avatar" placeholder="Posted By Avatar URL" required>
+            <input type="text" name="posted_by_description" placeholder="Posted By Description" required>
+            <button type="submit" class="full-width">Submit Deal</button>
+        </form>
+
+        <h2>Recent Deals</h2>
+        <div id="dealsList"></div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>

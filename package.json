@@ -1,0 +1,12 @@
+{
+  "name": "travel-deals-app",
+  "version": "1.0.0",
+  "description": "Travel Deals Data Entry Application",
+  "main": "index.js",
+  "scripts": {
+    "start": "serve ."
+  },
+  "dependencies": {
+    "serve": "^14.2.1"
+  }
+}
