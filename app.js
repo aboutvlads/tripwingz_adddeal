@@ -65,7 +65,7 @@ const prefillData = {
     id: generateUUID(),
     destination: 'Paris',
     country: 'France',
-    flag: '',
+    flag: '🇫🇷',
     image_url: 'https://example.com/image65.jpg',
     price: 199,
     original_price: 751,
@@ -94,7 +94,11 @@ function prefillForm() {
             return
         }
 
-        Object.entries(prefillData).forEach(([key, value]) => {
+        // Set a new UUID
+        const newUUID = generateUUID();
+        console.log('Generated UUID:', newUUID);
+
+        Object.entries({ ...prefillData, id: newUUID }).forEach(([key, value]) => {
             const input = form.elements[key]
             if (input) {
                 if (input.type === 'checkbox') {
@@ -118,92 +122,74 @@ function prefillForm() {
     }
 }
 
-// Wait for DOM to be fully loaded
-document.addEventListener('DOMContentLoaded', async () => {
-    console.log('DOM loaded, initializing...')
-    try {
-        // Initialize form
-        prefillForm()
-        
-        // Add form submit handler
-        const form = document.getElementById('dealForm')
-        if (!form) {
-            throw new Error('Form not found')
-        }
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault()
-            console.log('Form submission started')
-
-            try {
-                // Ensure we're authenticated
-                const isAuthenticated = await signInWithEmail()
-                if (!isAuthenticated) {
-                    alert('Error: Could not authenticate')
-                    return
-                }
-
-                const formData = new FormData(e.target)
-                const data = {
-                    id: formData.get('id') || generateUUID(),
-                    destination: formData.get('destination'),
-                    country: formData.get('country'),
-                    flag: formData.get('flag'),
-                    image_url: formData.get('image_url'),
-                    price: parseInt(formData.get('price')),
-                    original_price: parseInt(formData.get('original_price')),
-                    discount: parseInt(formData.get('discount')),
-                    departure: formData.get('departure'),
-                    stops: formData.get('stops'),
-                    is_hot: formData.get('is_hot') === 'on',
-                    type: formData.get('type'),
-                    likes: parseInt(formData.get('likes')),
-                    created_at: new Date().toISOString(),
-                    url: formData.get('url'),
-                    departure_time: formData.get('departure_time'),
-                    arrival_time: formData.get('arrival_time'),
-                    flight_duration: formData.get('flight_duration'),
-                    posted_by: formData.get('posted_by'),
-                    posted_by_avatar: formData.get('posted_by_avatar'),
-                    posted_by_description: formData.get('posted_by_description')
-                }
-
-                console.log('Submitting data:', data)
-
-                const { error } = await supabase
-                    .from('deals')
-                    .insert([data])
-
-                if (error) throw error
-
-                console.log('Deal submitted successfully')
-                alert('Deal submitted successfully!')
-                
-                // Generate new UUID for the form
-                const idInput = document.querySelector('input[name="id"]')
-                if (idInput) {
-                    idInput.value = generateUUID()
-                }
-                
-                // Reset form
-                e.target.reset()
-                
-                // Refresh deals display
-                await displayDeals()
-            } catch (error) {
-                console.error('Error in form submission:', error)
-                alert('Error submitting deal: ' + error.message)
-            }
-        })
-
-        // Initial display of deals
-        await displayDeals()
-        
-        console.log('Initialization complete')
-    } catch (error) {
-        console.error('Error during initialization:', error)
+// Function to initialize the form
+function initializeForm() {
+    console.log('Initializing form...');
+    prefillForm();
+    
+    const form = document.getElementById('dealForm');
+    if (!form) {
+        console.error('Form not found during initialization');
+        return;
     }
-})
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        console.log('Form submission started');
+
+        try {
+            // Ensure we're authenticated
+            const isAuthenticated = await signInWithEmail();
+            if (!isAuthenticated) {
+                alert('Error: Could not authenticate');
+                return;
+            }
+
+            const formData = new FormData(e.target);
+            const data = {
+                id: formData.get('id') || generateUUID(),
+                destination: formData.get('destination'),
+                country: formData.get('country'),
+                flag: formData.get('flag'),
+                image_url: formData.get('image_url'),
+                price: parseInt(formData.get('price')),
+                original_price: parseInt(formData.get('original_price')),
+                discount: parseInt(formData.get('discount')),
+                departure: formData.get('departure'),
+                stops: formData.get('stops'),
+                is_hot: formData.get('is_hot') === 'on',
+                type: formData.get('type'),
+                likes: parseInt(formData.get('likes')),
+                created_at: new Date().toISOString(),
+                url: formData.get('url'),
+                departure_time: formData.get('departure_time'),
+                arrival_time: formData.get('arrival_time'),
+                flight_duration: formData.get('flight_duration'),
+                posted_by: formData.get('posted_by'),
+                posted_by_avatar: formData.get('posted_by_avatar'),
+                posted_by_description: formData.get('posted_by_description')
+            };
+
+            console.log('Submitting data:', data);
+
+            const { error } = await supabase
+                .from('deals')
+                .insert([data]);
+
+            if (error) throw error;
+
+            console.log('Deal submitted successfully');
+            alert('Deal submitted successfully!');
+            
+            // Generate new UUID and reset form
+            prefillForm();
+            
+        } catch (error) {
+            console.error('Error in form submission:', error);
+            alert('Error submitting deal: ' + error.message);
+        }
+    });
+}
 
 async function displayDeals() {
     try {
@@ -260,4 +246,17 @@ async function displayDeals() {
     } catch (error) {
         console.error('Error in displayDeals:', error)
     }
+}
+
+// Initialize when DOM is loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOM Content Loaded');
+        initializeForm();
+        displayDeals();
+    });
+} else {
+    console.log('DOM already loaded');
+    initializeForm();
+    displayDeals();
 }
