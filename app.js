@@ -1,7 +1,15 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.1/+esm'
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js'
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+// Initialize Supabase client with error handling
+let supabase;
+try {
+    console.log('Initializing Supabase client...');
+    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('Supabase client initialized successfully');
+} catch (error) {
+    console.error('Error initializing Supabase client:', error);
+}
 
 // Function to generate UUID
 function generateUUID() {
@@ -15,8 +23,9 @@ function generateUUID() {
 // Sign in with email
 async function signInWithEmail() {
     try {
-        const email = 'test@example.com' // You can change this email
-        const password = 'test123456' // You can change this password
+        console.log('Attempting to sign in...');
+        const email = 'test@example.com'
+        const password = 'test123456'
 
         // Try to sign in
         let { data, error } = await supabase.auth.signInWithPassword({
@@ -56,12 +65,12 @@ const prefillData = {
     id: generateUUID(),
     destination: 'Paris',
     country: 'France',
-    flag: '🇫🇷',
+    flag: '',
     image_url: 'https://example.com/image65.jpg',
     price: 199,
     original_price: 751,
     discount: 104,
-    departure: 'New York',  
+    departure: 'New York',
     stops: 'Non-stop',
     is_hot: true,
     type: 'Economy',
@@ -88,12 +97,13 @@ function prefillForm() {
         Object.entries(prefillData).forEach(([key, value]) => {
             const input = form.elements[key]
             if (input) {
-                if (input.type === 'select-one') {
-                    input.value = value.toString()
-                } else if (input.type === 'checkbox') {
+                if (input.type === 'checkbox') {
                     input.checked = value
-                } else if (input.type === 'date') {
-                    input.value = value
+                } else if (input.type === 'select-one') {
+                    const option = Array.from(input.options).find(opt => opt.value === value)
+                    if (option) {
+                        option.selected = true
+                    }
                 } else {
                     input.value = value
                 }
@@ -108,78 +118,90 @@ function prefillForm() {
     }
 }
 
-document.getElementById('dealForm').addEventListener('submit', async (e) => {
-    e.preventDefault()
-    console.log('Form submission started')
-
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('DOM loaded, initializing...')
     try {
-        // Ensure we're authenticated
-        const isAuthenticated = await signInWithEmail()
-        if (!isAuthenticated) {
-            alert('Error: Could not authenticate')
-            return
+        // Initialize form
+        prefillForm()
+        
+        // Add form submit handler
+        const form = document.getElementById('dealForm')
+        if (!form) {
+            throw new Error('Form not found')
         }
 
-        const formData = new FormData(e.target)
-        const data = {
-            id: formData.get('id') || generateUUID(),
-            destination: formData.get('destination'),
-            country: formData.get('country'),
-            flag: formData.get('flag'),
-            image_url: formData.get('image_url'),
-            price: parseInt(formData.get('price')),
-            original_price: parseInt(formData.get('original_price')),
-            discount: parseInt(formData.get('discount')),
-            departure: formData.get('departure'),
-            stops: formData.get('stops'),
-            is_hot: formData.get('is_hot') === 'true',
-            type: formData.get('type'),
-            likes: parseInt(formData.get('likes')),
-            created_at: new Date().toISOString(),
-            url: formData.get('url'),
-            departure_time: formData.get('departure_time'),
-            arrival_time: formData.get('arrival_time'),
-            flight_duration: formData.get('flight_duration'),
-            posted_by: formData.get('posted_by'),
-            posted_by_avatar: formData.get('posted_by_avatar'),
-            posted_by_description: formData.get('posted_by_description')
-        }
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault()
+            console.log('Form submission started')
 
-        console.log('Submitting data:', data)
+            try {
+                // Ensure we're authenticated
+                const isAuthenticated = await signInWithEmail()
+                if (!isAuthenticated) {
+                    alert('Error: Could not authenticate')
+                    return
+                }
 
-        // Get the current user's ID
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) {
-            throw new Error('No authenticated user found')
-        }
-        
-        // Add the user_id to the data
-        // Removed this line as per the instruction
-        // data.user_id = user.id
+                const formData = new FormData(e.target)
+                const data = {
+                    id: formData.get('id') || generateUUID(),
+                    destination: formData.get('destination'),
+                    country: formData.get('country'),
+                    flag: formData.get('flag'),
+                    image_url: formData.get('image_url'),
+                    price: parseInt(formData.get('price')),
+                    original_price: parseInt(formData.get('original_price')),
+                    discount: parseInt(formData.get('discount')),
+                    departure: formData.get('departure'),
+                    stops: formData.get('stops'),
+                    is_hot: formData.get('is_hot') === 'on',
+                    type: formData.get('type'),
+                    likes: parseInt(formData.get('likes')),
+                    created_at: new Date().toISOString(),
+                    url: formData.get('url'),
+                    departure_time: formData.get('departure_time'),
+                    arrival_time: formData.get('arrival_time'),
+                    flight_duration: formData.get('flight_duration'),
+                    posted_by: formData.get('posted_by'),
+                    posted_by_avatar: formData.get('posted_by_avatar'),
+                    posted_by_description: formData.get('posted_by_description')
+                }
 
-        const { error } = await supabase
-            .from('deals')
-            .insert([data])
+                console.log('Submitting data:', data)
 
-        if (error) throw error
+                const { error } = await supabase
+                    .from('deals')
+                    .insert([data])
 
-        console.log('Deal submitted successfully')
-        alert('Deal submitted successfully!')
-        
-        // Generate new UUID for the form
-        const idInput = document.querySelector('input[name="id"]')
-        if (idInput) {
-            idInput.value = generateUUID()
-        }
-        
-        // Reset other form fields
-        e.target.reset()
-        
-        // Refresh the deals display
+                if (error) throw error
+
+                console.log('Deal submitted successfully')
+                alert('Deal submitted successfully!')
+                
+                // Generate new UUID for the form
+                const idInput = document.querySelector('input[name="id"]')
+                if (idInput) {
+                    idInput.value = generateUUID()
+                }
+                
+                // Reset form
+                e.target.reset()
+                
+                // Refresh deals display
+                await displayDeals()
+            } catch (error) {
+                console.error('Error in form submission:', error)
+                alert('Error submitting deal: ' + error.message)
+            }
+        })
+
+        // Initial display of deals
         await displayDeals()
+        
+        console.log('Initialization complete')
     } catch (error) {
-        console.error('Error in form submission:', error)
-        alert('Error submitting deal: ' + error.message)
+        console.error('Error during initialization:', error)
     }
 })
 
@@ -207,7 +229,7 @@ async function displayDeals() {
 
         dealsList.innerHTML = ''
         
-        if (data.length === 0) {
+        if (!data || data.length === 0) {
             dealsList.innerHTML = '<p>No deals found</p>'
             return
         }
@@ -223,7 +245,7 @@ async function displayDeals() {
                 </div>
                 <div>
                     <strong>Price:</strong> $${deal.price} (Save $${deal.discount})<br>
-                    <strong>Departure:</strong> ${new Date(deal.departure).toLocaleDateString()}<br>
+                    <strong>Departure:</strong> ${deal.departure}<br>
                     <strong>Duration:</strong> ${deal.flight_duration}
                 </div>
                 <div>
@@ -239,19 +261,3 @@ async function displayDeals() {
         console.error('Error in displayDeals:', error)
     }
 }
-
-// Initialize everything when the DOM is loaded
-document.addEventListener('DOMContentLoaded', async () => {
-    console.log('DOM loaded, initializing...')
-    try {
-        const authResult = await signInWithEmail()
-        console.log('Authentication result:', authResult)
-        
-        prefillForm()
-        await displayDeals()
-        
-        console.log('Initialization complete')
-    } catch (error) {
-        console.error('Error during initialization:', error)
-    }
-})
